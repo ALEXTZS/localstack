@@ -1,7 +1,7 @@
 {
   "QueueConfigurations": [
     {
-      "QueueArn": "arn:aws:sqs:us-east-1:000000000000:my-queue",
+      "QueueArn": "arn:aws:sqs:us-east-1:000000000000:fire",
       "Events": [
         "s3:ObjectCreated:*"
       ]

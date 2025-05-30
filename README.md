@@ -51,10 +51,18 @@ services:
       - AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
       - AWS_DEFAULT_REGION=us-east-1
       - AWS_DEFAULT_OUTPUT=json
+    command: sh -c /aws_setup/init.sh
+    healthcheck:
+      test: >-
+        awslocal s3 ls s3://fire-airflow/ 
+      interval: 30s
+      timeout: 5s
+      retries: 3
     volumes:
-      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
-      - "/var/run/docker.sock:/var/run/docker.sock"               # required by AWS Lambda
-      # - .docker-entrypoint.sh:/docker-entrypoint-initaws.d/docker-entrypoint.sh    
+      - ${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock               # required by AWS Lambda
+      # Scripts to Create AWS Services after every startup
+      - ./aws_setup:/aws_setup  
 ```
 
 ## Importante - Attention
@@ -77,42 +85,43 @@ $ docker compose exec localstack /bin/bash
 
 ## [Managing s3 Buckets](https://docs.localstack.cloud/user-guide/aws/s3/)
 ```sh
-# Create s3 Bucket
-$ aws s3api create-bucket --bucket my-bucket 
+# Create s3 Bucket (aws or awslocal)
+$ aws s3api create-bucket --bucket fire-airflow
 
-# List s3 Buckets
+# List s3 Buckets (aws or awslocal)
 $ aws s3api list-buckets  
 ```
 
 ## Managing s3 Objects
 ```sh
-# List
-$ aws s3api list-objects-v2 --bucket my-bucket
-$ aws s3 ls s3://my-bucket/ 
+# List (aws or awslocal)
+$ aws s3 ls s3://fire-airflow/ 
+$ aws s3api list-objects-v2 --bucket fire-airflow
 
-# Load object to s3 Bucket
-$ aws s3 cp notification.json s3://my-bucket/
-$ aws s3api put-object --bucket my-bucket --key notification.json --body notification.json
+# Load object to s3 Bucket (aws or awslocal)
+$ aws s3 cp aws_setup/notification/fire_s3_notification.json s3://fire-airflow/
+$ aws s3api put-object --bucket fire-airflow --key notification.json --body aws_setup/notification/fire_s3_notification.json
 ```
 
 ## [Managing Queues](https://docs.aws.amazon.com/pt_br/AmazonS3/latest/userguide/EventNotifications.html)
 ```sh
-# List
-$ awslocal sqs list-queues
+# List (aws or awslocal)
+$ aws sqs list-queues
 
-# Create
-$ aws sqs create-queue --queue-name my-queue
+# Create (aws or awslocal) 
+$ aws sqs create-queue --queue-name fire
 
-# Get Arn: 
-$ aws sqs get-queue-attributes --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/my-queue --attribute-names All
-  * Output: arn:aws:sqs:us-east-1:000000000000:my-queue 
+# Get Arn (aws or awslocal) 
+$ aws sqs get-queue-attributes --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/fire --attribute-names All
+  
+  * Output: arn:aws:sqs:us-east-1:000000000000:fire 
 
 # Notification definition
-notification.json << EOF \
+fire_s3_notification.json << EOF \
 { \
   "QueueConfigurations": [ \
     { \
-      "QueueArn": "arn:aws:sqs:us-east-1:000000000000:my-queue", \
+      "QueueArn": "arn:aws:sqs:us-east-1:000000000000:fire", \
       "Events": [ \
         "s3:ObjectCreated:*" \
       ] \
@@ -124,11 +133,12 @@ EOF
 
 ## Managing Events
 ```sh
-# Set s3 Event (attach Event action + Queue Arn)
-$ aws s3api put-bucket-notification-configuration --bucket my-bucket --notification-configuration file://notification.json
+# Attach Event action to Queue Arn
+$ cd aws-scripts
+$ aws s3api put-bucket-notification-configuration --bucket fire-airflow --notification-configuration file://notification/fire_s3_notification.json
 
-# Retrieve Queue Events
-$ aws sqs receive-message --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/my-queue
+# Retrieve Queue Events (aws or awslocal)
+$ aws sqs receive-message --queue-url http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/fire
 ```
 
 # Port Debug
