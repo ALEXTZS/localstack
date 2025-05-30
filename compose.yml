@@ -1,0 +1,41 @@
+
+services:
+  localstack:
+    container_name: ${LOCALSTACK_DOCKER_NAME:-localstack-main}
+    image: localstack/localstack
+    ports:
+      - "4566:4566"              # LocalStack Gateway - https://localhost.localstack.cloud:4566/
+      - "4510-4559"              # Reserving external services port range (opening)
+
+    environment:
+      # https://docs.localstack.cloud/references/configuration/
+      # GATEWAY_LISTEN 0.0.0.0:4566 (default in Docker mode) 127.0.0.1:4566 (default in host mode)
+      - GATEWAY_LISTEN=0.0.0.0:4566
+      # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+      - DEBUG=1 # ${DEBUG:-0}
+      - PERSISTENCE=1
+      # - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+      - SERVICES=s3,sqs
+      # AWS
+      - AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+      - AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_DEFAULT_OUTPUT=json
+    volumes:
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"               # required by AWS Lambda
+      # Create Bucket and SQS after startup
+      # - .docker-entrypoint.sh:/docker-entrypoint-initaws.d/docker-entrypoint.sh
+    networks:
+      - net
+
+# By warehouse
+networks:
+  net:
+    name: dev-net
+    external: true
+
+# Local volumes
+volumes:
+  localstack:
