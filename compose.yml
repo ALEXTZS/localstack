@@ -40,7 +40,11 @@ services:
 networks:
   net:
     name: dev-net
-    external: true
+    enable_ipv6: false
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
+          gateway: 172.19.0.1
 
 # Local volumes
 volumes:
