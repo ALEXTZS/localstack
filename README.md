@@ -69,10 +69,16 @@ services:
 Localstack persistence only works for services Kinesis, DynamoDB, Elasticsearch and S3
 
 Recommendation when configuring your stack via docker-compose (e.g., required container name, Docker network, volume mounts, and environment variables), is to use the LocalStack CLI to validate your configuration, which will print warning messages in case it detects any potential misconfigurations:
+
 ```sh
 $ localstack config validate -f compose.yml
 ```
 Obs.: best practice is to use Localstack CLI to validate every group of parameters
+
+## Check Services
+http://localhost.localstack.cloud:4566/_localstack/health
+{"services": {"acm": "disabled", "apigateway": "disabled", "cloudformation": "disabled", "cloudwatch": "disabled", "config": "disabled", "dynamodb": "disabled", "dynamodbstreams": "disabled", "ec2": "disabled", "es": "disabled", "events": "disabled", "firehose": "disabled", "iam": "disabled", "kinesis": "disabled", "kms": "disabled", "lambda": "disabled", "logs": "disabled", "opensearch": "disabled", "redshift": "disabled", "resource-groups": "disabled", "resourcegroupstaggingapi": "disabled", "route53": "disabled", "route53resolver": "disabled", "s3": "running", "s3control": "disabled", "scheduler": "disabled", "secretsmanager": "disabled", "ses": "disabled", "sns": "disabled", "sqs": "running", "ssm": "disabled", "stepfunctions": "disabled", "sts": "disabled", "support": "disabled", "swf": "disabled", "transcribe": "disabled"}, "edition": "community", "version": "4.4.1.dev58"}
+
 
 ## compose - Run 
 ```sh
@@ -143,11 +149,14 @@ $ aws sqs receive-message --queue-url http://sqs.us-east-1.localhost.localstack.
 
 # Port Debug
 ```sh
-$ lsof -i TCP| fgrep LISTEN
+$ sudo nmap localhost
 
-$ nmap localhost
+$ sudo netstat -tuln
 
-$ netstat -tuln
+$ sudo lsof -i TCP| fgrep LISTEN
+
+$ sudo kill 3245
 ```
 
 # [Deploy and invoke Lambda functions in LocalStack using VS Code Extension](https://www.youtube.com/watch?v=txVPCF-TITk)
+
