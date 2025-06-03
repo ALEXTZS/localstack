@@ -39,3 +39,10 @@ echo
 ./set_s3_event.sh || echo "set_s3_event.sh failed, continuing..."
 echo "###############################################################"
 echo
+echo "###############################################################"
+echo
+echo "Coping Objects to s3 Buckets..."
+echo
+./cp_s3.sh || echo "cp_s3.sh failed, continuing..."
+echo "###############################################################"
+echo
