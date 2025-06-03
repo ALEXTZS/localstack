@@ -105,7 +105,7 @@ $ aws s3 ls s3://fire-airflow/
 $ aws s3api list-objects-v2 --bucket fire-airflow
 
 # Load object to s3 Bucket (aws or awslocal)
-$ aws s3 cp aws_setup/notification/fire_s3_notification.json s3://fire-airflow/
+$ aws s3 cp aws_script/notification/fire_s3_notification.json s3://fire-airflow/
 $ aws s3api put-object --bucket fire-airflow --key notification.json --body aws_setup/notification/fire_s3_notification.json
 ```
 
