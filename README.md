@@ -29,29 +29,30 @@ $ git clone https://github.com/ALEXTZS/localstack.git ~/localstack
 
 # Compose (s3 Bucket + SQS)
 ```sh
-version: '3'
+
 services:
   localstack:
-    image: localstack/localstack
+    container_name: ${LOCALSTACK_DOCKER_NAME:-localstack-main}
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "4566:4566"              # LocalStack Gatway / Endpoint - https://localhost.localstack.cloud:4566/
-      - "4510-4559:4510-4559"    # external services port range
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway - https://localhost.localstack.cloud:4566/
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+
     environment:
-      # https://docs.localstack.cloud/references/configuration/
-      # GATEWAY_LISTEN 0.0.0.0:4566 (default in Docker mode) 127.0.0.1:4566 (default in host mode)
-      - GATEWAY_LISTEN=0.0.0.0:4566
       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+      # GATEWAY_LISTEN 0.0.0.0:4566 (default in Docker mode) 127.0.0.1:4566 (default in host mode)
+      # - GATEWAY_LISTEN=0.0.0.0:4566
       - DEBUG=1 # ${DEBUG:-0}
+      - DOCKER_HOST=unix:///var/run/docker.sock
       - PERSISTENCE=1
-      # - DOCKER_HOST=unix:///var/run/docker.sock
-      - AWS_DEFAULT_REGION=us-east-1
-      - SERVICES=s3,sqs
+      - SERVICES=s3,sts,sqs,iam
       # AWS
       - AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
       - AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
       - AWS_DEFAULT_REGION=us-east-1
       - AWS_DEFAULT_OUTPUT=json
-    command: sh -c /aws_setup/init.sh
     healthcheck:
       test: >-
         awslocal s3 ls s3://fire-airflow/ 
@@ -62,7 +63,26 @@ services:
       - ${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack
       - /var/run/docker.sock:/var/run/docker.sock               # required by AWS Lambda
       # Scripts to Create AWS Services after every startup
-      - ./aws_setup:/aws_setup  
+      - ./aws_scripts:/aws_scripts
+      - ./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+    networks:
+      net:
+        ipv4_address: 172.19.0.2
+
+# By warehouse
+networks:
+  net:
+    name: dev-net
+    enable_ipv6: false
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
+          gateway: 172.19.0.1
+
+# Local volumes
+volumes:
+  localstack:
+
 ```
 
 ## Importante - Attention
@@ -103,6 +123,8 @@ $ aws s3api list-buckets
 # List (aws or awslocal)
 $ aws s3 ls s3://fire-airflow/ 
 $ aws s3api list-objects-v2 --bucket fire-airflow
+$ aws s3api list-objects-v2 --bucket jaffle-shop-airflow
+$ aws s3 ls fire-airflow.s3.us-east-1.localhost.localstack.cloud
 
 # Load object to s3 Bucket (aws or awslocal)
 $ aws s3 cp aws_script/notification/fire_s3_notification.json s3://fire-airflow/
@@ -160,3 +182,10 @@ $ sudo kill 3245
 
 # [Deploy and invoke Lambda functions in LocalStack using VS Code Extension](https://www.youtube.com/watch?v=txVPCF-TITk)
 
+## Localstack UI 
+https://app.localstack.cloud/inst/default/resources
+
+## root access
+```sh
+docker exec -u root -it dag-processor /bin/bash
+```

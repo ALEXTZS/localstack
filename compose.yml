@@ -6,13 +6,13 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "4566:4566"            # LocalStack Gateway - https://localhost.localstack.cloud:4566/
-      - "4510-4559:4510-4559"  # external services port range
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway - https://localhost.localstack.cloud:4566/
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
 
     environment:
-       # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+      # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
       # GATEWAY_LISTEN 0.0.0.0:4566 (default in Docker mode) 127.0.0.1:4566 (default in host mode)
-      - GATEWAY_LISTEN=0.0.0.0:4566
+      # - GATEWAY_LISTEN=0.0.0.0:4566
       - DEBUG=1 # ${DEBUG:-0}
       - DOCKER_HOST=unix:///var/run/docker.sock
       - PERSISTENCE=1
